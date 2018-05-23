@@ -1,6 +1,6 @@
 pragma solidity ^0.4.4;
 contract Trade {
-  uint public value;
+  uint256 public value;
   address public exporter;
   address public importer;
 
@@ -8,12 +8,44 @@ contract Trade {
 
   State public state;
 
-  function Trade() {
+  function Trade(address _importer, uint256 _value) {
     exporter = msg.sender;
-    value = msg.value / 2;
-    if(2 * value != msg.value) throw;
+    importer = _importer;
+    value = _value;
+    //msg.value = _value;
+    //value = msg.value / 2;
+    //if(2 * value != msg.value) throw;
   }
 
+  function getValue() returns (uint256) {
+      return value;
+  }
+  function getMsgValue() returns (uint256) {
+      return msg.value;
+  }
+  function getImporter() returns (address) {
+    return importer;
+  }
+
+  function getImporterBalance() returns (uint) {
+    return importer.balance;
+  }
+
+  function getExporterBalance() returns (uint) {
+    return msg.sender.balance;
+  }
+  function getContractBalance() returns (uint) {
+    return this.balance;
+  }
+  function setImporter(address _importer) public {
+    importer = _importer;
+  }
+  function transfer(address _importer) payable public {
+    this.transfer(value);
+  }
+  function() payable {
+    throw;
+  }
   modifier require(bool _condition) {
     if(!_condition) throw;
     _;
@@ -50,7 +82,7 @@ contract Trade {
 
   function confirmTrade()
     inState(State.Created)
-    require(msg.value == 2 * value)
+    require(msg.value == value)
   {
     tradeConfirmed();
     importer = msg.sender;
@@ -62,13 +94,9 @@ contract Trade {
     inState(State.Locked)
   {
     goodReceived();
-    importer.send(value);
-    exporter.send(this.balance);
+    //importer.send(value);
+    exporter.send(value);
     //msg.sender.transfer(value);
     state = State.Inactive;
-  }
-
-  function() {
-    throw;
   }
 }
